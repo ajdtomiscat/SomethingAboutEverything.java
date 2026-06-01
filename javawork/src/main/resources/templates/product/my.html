@@ -1,0 +1,314 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的商品 - 二手交易平台</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.8.18/css/layui.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        
+        .header { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            padding: 0 15px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            padding: 8px 18px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid transparent;
+            margin: 0 3px;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.25);
+            border-color: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .nav-links a.active {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .user-menu {
+            position: relative;
+            display: inline-block;
+        }
+
+        .user-menu-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user-menu-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 5px);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 140px;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .user-dropdown a {
+            display: block;
+            padding: 10px 16px;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .user-dropdown a:hover {
+            background: #f5f7fa;
+        }
+
+        .user-menu.active .user-dropdown {
+            display: block;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .mobile-menu {
+            display: none;
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 10px 0;
+        }
+
+        .mobile-menu a {
+            display: block;
+            padding: 12px 20px;
+            color: #333;
+            text-decoration: none;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .mobile-menu a:hover {
+            background: #f5f7fa;
+        }
+
+        @media screen and (max-width: 1200px) {
+            .nav-links { gap: 10px; }
+            .nav-links a { font-size: 14px; padding: 6px 10px; }
+        }
+
+        @media screen and (max-width: 992px) {
+            .nav-links { display: none; }
+            .mobile-menu-btn { display: inline-block; }
+            .header .layui-btn { padding: 0 10px; font-size: 13px; margin-left: 5px; }
+        }
+
+        @media screen and (max-width: 768px) {
+            .header .layui-col-md3:last-child { display: flex; align-items: center; justify-content: flex-end; }
+            .header .layui-btn { padding: 0 8px; font-size: 12px; margin-left: 3px; }
+            .search-form { order: 3; width: 100%; margin-top: 10px; }
+        }
+
+        @media screen and (max-width: 480px) {
+            .header .layui-btn { padding: 0 6px; font-size: 11px; margin-left: 2px; }
+            .header h1 { font-size: 18px !important; }
+        }
+
+        .sidebar-container { position: sticky; top: 20px; }
+        .product-table { background: white; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="layui-container">
+            <div class="layui-row" style="display: flex; align-items: center; height: 60px;">
+                <div class="layui-col-md2" style="flex-shrink: 0;">
+                    <h1 style="color:white; line-height: 60px; font-size: 24px; font-weight: 700; margin: 0;">🏪 二手集市</h1>
+                </div>
+                
+                <div class="layui-col-md2 nav-links">
+                    <a href="/">首页</a>
+                    <a href="/products">全部商品</a>
+                    <a href="/products/my">我的商品</a>
+                </div>
+                
+                <div class="layui-col-md5 search-form" style="flex: 1; min-width: 0; padding: 0 15px;">
+                    <form action="/products" method="get" style="width: 100%; display: flex;">
+                        <input type="text" name="keyword" placeholder="搜索商品..." class="layui-input" style="height: 36px; border-radius: 4px 0 0 4px; flex: 1; min-width: 0;">
+                        <div class="layui-input-group-btn" style="flex-shrink: 0;">
+                            <button class="layui-btn" style="height: 36px; line-height: 36px; background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.4); color: white; padding: 0 14px;">搜索</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="layui-col-md3" style="display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0; gap: 8px;">
+                    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰ 菜单</button>
+                    <a href="/products/publish" class="layui-btn" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);">📦 发布</a>
+                    <div class="user-menu" id="userMenu">
+                        <button class="user-menu-btn" onclick="toggleUserMenu()">
+                            <span>👤 [[${session.user?.nickname}]]</span>
+                            <span>▼</span>
+                        </button>
+                        <div class="user-dropdown">
+                            <a href="/profile">👤 个人中心</a>
+                            <a href="/products/my">📦 我的商品</a>
+                            <a href="/orders/buy">🛒 我的订单</a>
+                            <a href="/messages">💬 私信</a>
+                            <a href="/logout" style="color: #ff5722;">🚪 退出登录</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mobileMenu" class="mobile-menu">
+            <a href="/">首页</a>
+            <a href="/products">全部商品</a>
+            <a href="/products/my">我的商品</a>
+            <a href="/orders/buy">我的订单</a>
+            <a href="/messages">私信</a>
+        </div>
+    </div>
+
+    <div class="layui-container" style="margin-top: 20px;">
+        <div class="layui-row">
+            <div class="layui-col-md2 sidebar-container">
+                <div class="layui-card">
+                    <div class="layui-card-header">个人中心</div>
+                    <div class="layui-card-body">
+                        <ul class="layui-nav layui-nav-tree">
+                            <li class="layui-nav-item layui-this"><a href="/products/my">我的商品</a></li>
+                            <li class="layui-nav-item"><a href="/orders/buy">我买到的</a></li>
+                            <li class="layui-nav-item"><a href="/orders/sell">我卖出的</a></li>
+                            <li class="layui-nav-item"><a href="/messages">私信</a></li>
+                            <li class="layui-nav-item"><a href="/profile">个人资料</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="layui-col-md10">
+                <div class="layui-card product-table">
+                    <div class="layui-card-header">我的商品</div>
+                    <div class="layui-card-body">
+                        <table class="layui-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:50px;">图片</th>
+                                    <th>商品名称</th>
+                                    <th>分类</th>
+                                    <th>价格</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="product : ${products}">
+                                    <td>
+                                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect fill='%23f5f5f5' width='40' height='40'/%3E%3C/svg%3E"
+                                             width="40" height="40" style="object-fit:cover;border-radius:4px;"
+                                             th:attr="data-images=${product.images}" class="my-product-img">
+                                    </td>
+                                    <td><a th:href="@{/products/{id}(id=${product.id})}">[[${product.title}]]</a></td>
+                                    <td>[[${product.categoryName}]]</td>
+                                    <td>¥[[${product.price}]]</td>
+                                    <td>
+                                        <span th:switch="${product.status}">
+                                            <span th:case="1" class="layui-badge layui-bg-green">在售</span>
+                                            <span th:case="2" class="layui-badge layui-bg-blue">已售出</span>
+                                            <span th:case="3" class="layui-badge">已下架</span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/products/{id}/edit(id=${product.id})}" class="layui-btn layui-btn-xs">编辑</a>
+                                        <a th:if="${product.status == 1}" th:href="@{/products/{id}/toggleStatus(id=${product.id})}" class="layui-btn layui-btn-xs layui-btn-warm">下架</a>
+                                        <a th:if="${product.status == 3}" th:href="@{/products/{id}/toggleStatus(id=${product.id})}" class="layui-btn layui-btn-xs layui-btn-normal">上架</a>
+                                        <a th:href="@{/products/{id}/delete(id=${product.id})}" class="layui-btn layui-btn-xs layui-btn-danger">删除</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div th:if="${products.isEmpty()}" style="text-align: center; padding: 50px;">
+                            <p style="color: #999;">暂无商品</p>
+                            <a href="/products/publish" class="layui-btn">发布商品</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.staticfile.org/layui/2.8.18/layui.js"></script>
+    <script>
+    document.querySelectorAll('.my-product-img').forEach(function(img) {
+        try {
+            var images = JSON.parse(img.getAttribute('data-images'));
+            if (images.length > 0) img.src = images[0];
+        } catch(e) {}
+    });
+
+    function toggleMobileMenu() {
+        var menu = document.getElementById('mobileMenu');
+        if (menu.style.display === 'block') {
+            menu.style.display = 'none';
+        } else {
+            menu.style.display = 'block';
+        }
+    }
+
+    function toggleUserMenu() {
+        var userMenu = document.getElementById('userMenu');
+        userMenu.classList.toggle('active');
+    }
+
+    document.addEventListener('click', function(event) {
+        var mobileMenu = document.getElementById('mobileMenu');
+        var mobileBtn = document.querySelector('.mobile-menu-btn');
+        var userMenu = document.getElementById('userMenu');
+        var userBtn = document.querySelector('.user-menu-btn');
+        
+        if (mobileMenu && mobileBtn && !mobileMenu.contains(event.target) && !mobileBtn.contains(event.target)) {
+            mobileMenu.style.display = 'none';
+        }
+        
+        if (userMenu && userBtn && !userMenu.contains(event.target) && !userBtn.contains(event.target)) {
+            userMenu.classList.remove('active');
+        }
+    });
+    </script>
+</body>
+</html>

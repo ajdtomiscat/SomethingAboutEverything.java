@@ -1,0 +1,358 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发布商品 - 二手交易平台</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.8.18/css/layui.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        
+        .header { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            padding: 0 15px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            padding: 8px 18px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid transparent;
+            margin: 0 3px;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.25);
+            border-color: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .user-menu {
+            position: relative;
+            display: inline-block;
+        }
+
+        .user-menu-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user-menu-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 5px);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 140px;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .user-dropdown a {
+            display: block;
+            padding: 10px 16px;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .user-dropdown a:hover {
+            background: #f5f7fa;
+        }
+
+        .user-menu.active .user-dropdown {
+            display: block;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .mobile-menu {
+            display: none;
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 10px 0;
+        }
+
+        .mobile-menu a {
+            display: block;
+            padding: 12px 20px;
+            color: #333;
+            text-decoration: none;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .mobile-menu a:hover {
+            background: #f5f7fa;
+        }
+
+        @media screen and (max-width: 1200px) {
+            .nav-links { gap: 10px; }
+            .nav-links a { font-size: 14px; padding: 6px 10px; }
+        }
+
+        @media screen and (max-width: 992px) {
+            .nav-links { display: none; }
+            .mobile-menu-btn { display: inline-block; }
+        }
+
+        @media screen and (max-width: 768px) {
+            .header .layui-col-md3:last-child { display: flex; align-items: center; justify-content: flex-end; }
+            .search-form { order: 3; width: 100%; margin-top: 10px; }
+        }
+
+        .preview-container { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+        .preview-item {
+            position: relative; width: 110px; height: 110px;
+            border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden;
+            background: #fafafa;
+        }
+        .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .preview-item .del-btn {
+            position: absolute; top: 4px; right: 4px; width: 22px; height: 22px;
+            background: rgba(0,0,0,0.55); color: #fff; border-radius: 50%;
+            text-align: center; line-height: 22px; cursor: pointer; font-size: 14px;
+            display: none; user-select: none;
+        }
+        .preview-item:hover .del-btn { display: block; }
+        .upload-hint { color: #999; font-size: 12px; margin-left: 10px; }
+        .publish-form { background: white; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="layui-container">
+            <div class="layui-row" style="display: flex; align-items: center; height: 60px;">
+                <div class="layui-col-md2" style="flex-shrink: 0;">
+                    <h1 style="color:white; line-height: 60px; font-size: 24px; font-weight: 700; margin: 0;">🏪 二手集市</h1>
+                </div>
+                
+                <div class="layui-col-md2 nav-links">
+                    <a href="/">首页</a>
+                    <a href="/products">全部商品</a>
+                    <a href="/products/my">我的商品</a>
+                </div>
+                
+                <div class="layui-col-md5 search-form" style="flex: 1; min-width: 0; padding: 0 15px;">
+                    <form action="/products" method="get" style="width: 100%; display: flex;">
+                        <input type="text" name="keyword" placeholder="搜索商品..." class="layui-input" style="height: 36px; border-radius: 4px 0 0 4px; flex: 1; min-width: 0;">
+                        <div class="layui-input-group-btn" style="flex-shrink: 0;">
+                            <button class="layui-btn" style="height: 36px; line-height: 36px; background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.4); color: white; padding: 0 14px;">搜索</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="layui-col-md3" style="display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0; gap: 8px;">
+                    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰ 菜单</button>
+                    <a href="/products/publish" class="layui-btn" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);">📦 发布</a>
+                    <div class="user-menu" id="userMenu">
+                        <button class="user-menu-btn" onclick="toggleUserMenu()">
+                            <span>👤 [[${session.user?.nickname}]]</span>
+                            <span>▼</span>
+                        </button>
+                        <div class="user-dropdown">
+                            <a href="/profile">👤 个人中心</a>
+                            <a href="/products/my">📦 我的商品</a>
+                            <a href="/orders/buy">🛒 我的订单</a>
+                            <a href="/messages">💬 私信</a>
+                            <a href="/logout" style="color: #ff5722;">🚪 退出登录</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mobileMenu" class="mobile-menu">
+            <a href="/">首页</a>
+            <a href="/products">全部商品</a>
+            <a href="/products/my">我的商品</a>
+            <a href="/orders/buy">我的订单</a>
+            <a href="/messages">私信</a>
+        </div>
+    </div>
+
+    <div class="layui-container" style="margin-top: 20px;">
+        <div class="layui-row">
+            <div class="layui-col-md8 layui-col-md-offset2">
+                <div class="layui-card publish-form">
+                    <div class="layui-card-header">发布商品</div>
+                    <div class="layui-card-body">
+                        <form class="layui-form" action="/products/publish" method="post">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">商品标题</label>
+                                <div class="layui-input-block">
+                                    <input type="text" name="title" required lay-verify="required" placeholder="请输入商品标题" class="layui-input">
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">商品分类</label>
+                                <div class="layui-input-block">
+                                    <select name="categoryId" required lay-verify="required" class="layui-input">
+                                        <option value="">请选择分类</option>
+                                        <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}"></option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">售价</label>
+                                <div class="layui-input-block">
+                                    <input type="number" step="0.01" name="price" required lay-verify="required" placeholder="请输入售价" class="layui-input">
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">原价</label>
+                                <div class="layui-input-block">
+                                    <input type="number" step="0.01" name="originalPrice" placeholder="请输入原价（选填）" class="layui-input">
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">商品描述</label>
+                                <div class="layui-input-block">
+                                    <textarea name="description" required lay-verify="required" placeholder="请描述商品详情" class="layui-textarea"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">商品图片</label>
+                                <div class="layui-input-block">
+                                    <button type="button" class="layui-btn" id="uploadBtn">
+                                        <i class="layui-icon layui-icon-upload"></i> 上传图片
+                                    </button>
+                                    <span class="upload-hint">支持JPG/PNG/GIF/WebP，单张不超过5MB，可上传多张</span>
+                                    <input type="hidden" name="images" id="imagesInput" value="[]">
+                                    <div class="preview-container" id="previewList"></div>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <button class="layui-btn layui-btn-lg layui-btn-fluid" lay-submit lay-filter="submit">发布商品</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.staticfile.org/layui/2.8.18/layui.js"></script>
+    <script>
+    function toggleMobileMenu() {
+        var menu = document.getElementById('mobileMenu');
+        if (menu.style.display === 'block') {
+            menu.style.display = 'none';
+        } else {
+            menu.style.display = 'block';
+        }
+    }
+
+    function toggleUserMenu() {
+        var userMenu = document.getElementById('userMenu');
+        userMenu.classList.toggle('active');
+    }
+
+    document.addEventListener('click', function(event) {
+        var mobileMenu = document.getElementById('mobileMenu');
+        var mobileBtn = document.querySelector('.mobile-menu-btn');
+        var userMenu = document.getElementById('userMenu');
+        var userBtn = document.querySelector('.user-menu-btn');
+        
+        if (mobileMenu && mobileBtn && !mobileMenu.contains(event.target) && !mobileBtn.contains(event.target)) {
+            mobileMenu.style.display = 'none';
+        }
+        
+        if (userMenu && userBtn && !userMenu.contains(event.target) && !userBtn.contains(event.target)) {
+            userMenu.classList.remove('active');
+        }
+    });
+
+    layui.use(['upload', 'layer'], function() {
+        var upload = layui.upload;
+        var layer = layui.layer;
+        var imageUrls = [];
+
+        upload.render({
+            elem: '#uploadBtn',
+            url: '/upload',
+            multiple: true,
+            accept: 'images',
+            exts: 'jpg|jpeg|png|gif|webp',
+            size: 5120,
+            before: function(obj) {
+                layer.load(1, { shade: [0.1, '#fff'] });
+            },
+            done: function(res) {
+                layer.closeAll('loading');
+                if (res.code === 0) {
+                    imageUrls.push(res.data.src);
+                    refreshPreview();
+                } else {
+                    layer.msg(res.msg || '上传失败');
+                }
+            },
+            error: function() {
+                layer.closeAll('loading');
+                layer.msg('上传失败，请重试');
+            }
+        });
+
+        function refreshPreview() {
+            var html = '';
+            imageUrls.forEach(function(url) {
+                html += '<div class="preview-item">'
+                     + '<img src="' + url + '" alt="商品图片">'
+                     + '<span class="del-btn" data-url="' + url + '">×</span>'
+                     + '</div>';
+            });
+            document.getElementById('previewList').innerHTML = html;
+            document.getElementById('imagesInput').value = JSON.stringify(imageUrls);
+        }
+
+        document.getElementById('previewList').addEventListener('click', function(e) {
+            if (e.target.classList.contains('del-btn')) {
+                var url = e.target.getAttribute('data-url');
+                imageUrls = imageUrls.filter(function(u) { return u !== url; });
+                refreshPreview();
+            }
+        });
+    });
+    </script>
+</body>
+</html>

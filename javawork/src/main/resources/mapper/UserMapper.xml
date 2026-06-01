@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.secondhand.mapper.UserMapper">
+    <insert id="insert" parameterType="User">
+        INSERT INTO user (username, password, nickname, phone, email, avatar, address)
+        VALUES (#{username}, #{password}, #{nickname}, #{phone}, #{email}, #{avatar}, #{address})
+    </insert>
+    
+    <select id="findById" parameterType="Long" resultType="User">
+        SELECT * FROM user WHERE id = #{id}
+    </select>
+    
+    <select id="findByUsername" parameterType="String" resultType="User">
+        SELECT * FROM user WHERE username = #{username}
+    </select>
+    
+    <select id="findByPhone" parameterType="String" resultType="User">
+        SELECT * FROM user WHERE phone = #{phone}
+    </select>
+    
+    <update id="update" parameterType="User">
+        UPDATE user
+        <set>
+            <if test="password != null">password = #{password},</if>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="address != null">address = #{address},</if>
+            updated_at = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <delete id="delete" parameterType="Long">
+        DELETE FROM user WHERE id = #{id}
+    </delete>
+</mapper>

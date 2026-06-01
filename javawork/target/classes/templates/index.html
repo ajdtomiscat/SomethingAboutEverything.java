@@ -1,0 +1,451 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二手集市 - 校园二手交易平台</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.8.18/css/layui.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 0 15px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            padding: 8px 18px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid transparent;
+            margin: 0 3px;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.25);
+            border-color: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .nav-links a.active {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 50px 0;
+            text-align: center;
+            color: white;
+        }
+        .banner h1 { font-size: 36px; margin-bottom: 10px; }
+        .banner p { font-size: 16px; opacity: 0.9; }
+
+        .product-card {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #f0f0f0;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: transparent;
+        }
+        .product-card .layui-card-body { padding: 15px; }
+        .product-img { height: 180px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #f5f7fa; }
+        .product-card-img { width: 100%; height: 180px; object-fit: cover; display: block; }
+        .product-img-placeholder { font-size: 48px; color: #bbb; }
+
+        .product-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 10px 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .product-title a { color: #333; }
+        .product-title a:hover { color: #667eea; }
+        .product-price {
+            color: #ff5722;
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .product-meta {
+            color: #999;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .product-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            font-size: 12px;
+            color: #666;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #999;
+        }
+        .empty-state .layui-icon {
+            font-size: 60px;
+            color: #ddd;
+        }
+        .category-nav a {
+            color: #555;
+            transition: color 0.2s;
+        }
+        .category-nav a:hover {
+            color: #667eea;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .mobile-menu {
+            display: none;
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 10px 0;
+        }
+
+        .mobile-menu a {
+            display: block;
+            padding: 12px 20px;
+            color: #333;
+            text-decoration: none;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .mobile-menu a:hover {
+            background: #f5f7fa;
+        }
+
+        /* 用户下拉菜单 */
+        .user-menu {
+            position: relative;
+            display: inline-block;
+        }
+
+        .user-menu-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user-menu-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 5px);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 140px;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .user-dropdown a {
+            display: block;
+            padding: 10px 16px;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .user-dropdown a:hover {
+            background: #f5f7fa;
+        }
+
+        .user-dropdown a:first-child {
+            border-top: none;
+        }
+
+        .user-dropdown.divider {
+            height: 1px;
+            background: #eee;
+            margin: 4px 0;
+        }
+
+        .user-menu.active .user-dropdown {
+            display: block;
+        }
+
+        /* 响应式布局修复 */
+        @media screen and (max-width: 1200px) {
+            .nav-links {
+                gap: 10px;
+            }
+            .nav-links a {
+                font-size: 14px;
+                padding: 6px 10px;
+            }
+        }
+
+        @media screen and (max-width: 992px) {
+            .nav-links {
+                display: none;
+            }
+            .mobile-menu-btn {
+                display: inline-block;
+            }
+            .header .layui-btn { 
+                padding: 0 10px; 
+                font-size: 13px; 
+                margin-left: 5px;
+            }
+            .product-card-img { height: 140px; }
+            .banner h1 { font-size: 26px; }
+            .banner { padding: 30px 0; }
+        }
+
+        @media screen and (max-width: 768px) {
+            .header .layui-col-md3:last-child {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+            }
+            .header .layui-btn { 
+                padding: 0 8px; 
+                font-size: 12px; 
+                margin-left: 3px;
+            }
+            .product-card-img { height: 200px; }
+            .banner h1 { font-size: 22px; }
+            .banner p { font-size: 14px; }
+            .search-form {
+                order: 3;
+                width: 100%;
+                margin-top: 10px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .header .layui-btn {
+                padding: 0 6px;
+                font-size: 11px;
+                margin-left: 2px;
+            }
+            .header h1 {
+                font-size: 18px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="layui-container">
+            <div class="layui-row" style="display: flex; align-items: center; height: 60px;">
+                <!-- Logo -->
+                <div class="layui-col-md2" style="flex-shrink: 0;">
+                    <h1 style="color:white; line-height: 60px; font-size: 24px; font-weight: 700; margin: 0;">🏪 二手集市</h1>
+                </div>
+                
+                <!-- 导航链接 -->
+                <div class="layui-col-md2 nav-links">
+                    <a href="/">首页</a>
+                    <a href="/products">全部商品</a>
+                    <a href="/products/my">我的商品</a>
+                </div>
+                
+                <!-- 搜索栏 -->
+                <div class="layui-col-md5 search-form" style="flex: 1; min-width: 0; padding: 0 15px;">
+                    <form action="/products" method="get" style="width: 100%; display: flex;">
+                        <input type="text" name="keyword" placeholder="搜索商品名称、描述..." class="layui-input" style="height: 36px; border-radius: 4px 0 0 4px; flex: 1; min-width: 0;">
+                        <div class="layui-input-group-btn" style="flex-shrink: 0;">
+                            <button class="layui-btn" style="height: 36px; line-height: 36px; background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.4); color: white; padding: 0 14px;">搜索</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- 用户操作按钮 -->
+                <div class="layui-col-md3" style="display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0; gap: 8px;">
+                    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰ 菜单</button>
+                    
+                    <!-- 发布按钮（始终显示） -->
+                    <a href="/products/publish" class="layui-btn" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);">📦 发布</a>
+                    
+                    <!-- 用户下拉菜单 -->
+                    <div class="user-menu" id="userMenu">
+                        <button class="user-menu-btn" onclick="toggleUserMenu()">
+                            <span th:if="${session.user == null}">👤 登录</span>
+                            <span th:else>👤 [[${session.user?.nickname}]]</span>
+                            <span>▼</span>
+                        </button>
+                        <div class="user-dropdown">
+                            <th:block th:if="${session.user == null}">
+                                <a href="/login">� 登录</a>
+                                <a href="/register">📝 注册</a>
+                            </th:block>
+                            <th:block th:else>
+                                <a href="/profile">👤 个人中心</a>
+                                <a href="/products/my">📦 我的商品</a>
+                                <a href="/orders/buy">🛒 我的订单</a>
+                                <a href="/messages">💬 私信</a>
+                                <a href="/logout" style="color: #ff5722;">🚪 退出登录</a>
+                            </th:block>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 移动端菜单 -->
+        <div id="mobileMenu" class="mobile-menu">
+            <a href="/">首页</a>
+            <a href="/products">全部商品</a>
+            <a href="/products/my">我的商品</a>
+            <a href="/orders/buy">我的订单</a>
+            <a href="/messages">私信</a>
+        </div>
+    </div>
+
+    <div class="banner">
+        <div class="layui-container">
+            <h1>欢迎来到二手集市</h1>
+            <p>绿色环保，闲置交易，让每一件物品找到新的主人</p>
+            <div style="margin-top: 20px;">
+                <a href="/products" class="layui-btn layui-btn-lg" style="background: white; color: #667eea;">逛逛商品</a>
+                <a href="/products/publish" class="layui-btn layui-btn-lg layui-btn-primary" style="border: 1px solid white; color: white;">发布闲置</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-container" style="margin-top: 30px;">
+        <!-- 分类导航 -->
+        <div class="layui-card" style="margin-bottom: 25px;">
+            <div class="layui-card-header" style="font-size: 16px; font-weight: 600;">📂 商品分类</div>
+            <div class="layui-card-body category-nav">
+                <a href="/products" class="layui-btn layui-btn-sm" style="margin: 3px; background: #667eea;">全部</a>
+                <a th:each="category : ${categories}"
+                   th:href="@{/products(categoryId=${category.id})}"
+                   class="layui-btn layui-btn-sm layui-btn-primary" style="margin: 3px;">
+                   [[${category.name}]]
+                </a>
+            </div>
+        </div>
+
+        <!-- 商品列表 -->
+        <div class="layui-row layui-col-space20">
+            <div class="layui-col-md12">
+                <h2 style="font-size: 20px; margin-bottom: 20px; color: #333;">🔥 最新商品</h2>
+            </div>
+
+            <div th:if="${products != null and !products.isEmpty()}" th:each="product : ${products}" class="layui-col-sm6 layui-col-md3">
+                <div class="layui-card product-card">
+                    <img class="product-card-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='180'%3E%3Crect fill='%23f5f7fa' width='200' height='180'/%3E%3C/svg%3E"
+                         alt="商品图片" th:attr="data-images=${product.images}">
+                    <div class="layui-card-body">
+                        <div class="product-meta">
+                            <span class="product-tag">[[${product.categoryName != null ? product.categoryName : '未分类'}]]</span>
+                        </div>
+                        <div class="product-title">
+                            <a th:href="@{/products/{id}(id=${product.id})}">[[${product.title}]]</a>
+                        </div>
+                        <div class="product-price">¥[[${product.price}]]</div>
+                        <div class="product-meta">
+                            <span>👤 [[${product.userNickname}]]</span>
+                            <span style="float: right;">👁 [[${product.views}]]</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${products == null or products.isEmpty()}" class="layui-col-md12">
+                <div class="empty-state">
+                    <p style="font-size: 48px; margin-bottom: 15px;">📭</p>
+                    <p style="font-size: 18px;">还没有商品</p>
+                    <p style="margin-top: 10px;">成为第一个发布商品的人吧！</p>
+                    <a href="/products/publish" class="layui-btn" style="margin-top: 20px;">发布商品</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="background: #2c3e50; color: white; text-align: center; padding: 30px; margin-top: 50px;">
+        <p style="opacity: 0.8;">二手交易平台 © 2026 - 让闲置物品流动起来</p>
+        <p style="opacity: 0.5; font-size: 12px; margin-top: 5px;">校园二手集市 · 绿色环保 · 诚信交易</p>
+    </div>
+
+    <script src="https://cdn.staticfile.org/layui/2.8.18/layui.js"></script>
+    <script>
+    document.querySelectorAll('.product-card-img').forEach(function(img) {
+        try {
+            var images = JSON.parse(img.getAttribute('data-images'));
+            if (images.length > 0 && images[0]) {
+                img.src = images[0];
+            }
+        } catch(e) {}
+    });
+
+    function toggleMobileMenu() {
+        var menu = document.getElementById('mobileMenu');
+        if (menu.style.display === 'block') {
+            menu.style.display = 'none';
+        } else {
+            menu.style.display = 'block';
+        }
+    }
+
+    function toggleUserMenu() {
+        var userMenu = document.getElementById('userMenu');
+        userMenu.classList.toggle('active');
+    }
+
+    // 点击页面其他地方关闭菜单
+    document.addEventListener('click', function(event) {
+        var mobileMenu = document.getElementById('mobileMenu');
+        var mobileBtn = document.querySelector('.mobile-menu-btn');
+        var userMenu = document.getElementById('userMenu');
+        var userBtn = document.querySelector('.user-menu-btn');
+        
+        // 关闭移动端菜单
+        if (mobileMenu && mobileBtn && !mobileMenu.contains(event.target) && !mobileBtn.contains(event.target)) {
+            mobileMenu.style.display = 'none';
+        }
+        
+        // 关闭用户菜单
+        if (userMenu && userBtn && !userMenu.contains(event.target) && !userBtn.contains(event.target)) {
+            userMenu.classList.remove('active');
+        }
+    });
+    </script>
+</body>
+</html>

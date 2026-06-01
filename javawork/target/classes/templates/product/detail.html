@@ -1,0 +1,411 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品详情 - 二手交易平台</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.8.18/css/layui.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        
+        .header { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            padding: 0 15px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            padding: 8px 18px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid transparent;
+            margin: 0 3px;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.25);
+            border-color: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .nav-links a.active {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .user-menu {
+            position: relative;
+            display: inline-block;
+        }
+
+        .user-menu-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user-menu-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 5px);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 140px;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .user-dropdown a {
+            display: block;
+            padding: 10px 16px;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .user-dropdown a:hover {
+            background: #f5f7fa;
+        }
+
+        .user-menu.active .user-dropdown {
+            display: block;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .mobile-menu {
+            display: none;
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 10px 0;
+        }
+
+        .mobile-menu a {
+            display: block;
+            padding: 12px 20px;
+            color: #333;
+            text-decoration: none;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .mobile-menu a:hover {
+            background: #f5f7fa;
+        }
+
+        @media screen and (max-width: 1200px) {
+            .nav-links { gap: 10px; }
+            .nav-links a { font-size: 14px; padding: 6px 10px; }
+        }
+
+        @media screen and (max-width: 992px) {
+            .nav-links { display: none; }
+            .mobile-menu-btn { display: inline-block; }
+            .header .layui-btn { padding: 0 10px; font-size: 13px; margin-left: 5px; }
+        }
+
+        @media screen and (max-width: 768px) {
+            .header .layui-col-md3:last-child { display: flex; align-items: center; justify-content: flex-end; }
+            .header .layui-btn { padding: 0 8px; font-size: 12px; margin-left: 3px; }
+            .search-form { order: 3; width: 100%; margin-top: 10px; }
+        }
+
+        @media screen and (max-width: 480px) {
+            .header .layui-btn { padding: 0 6px; font-size: 11px; margin-left: 2px; }
+            .header h1 { font-size: 18px !important; }
+        }
+
+        .main-image-container { height: 400px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #f5f5f5; border-radius: 4px; }
+        .main-image-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .thumb-list { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .thumb-item { width: 60px; height: 60px; border: 2px solid transparent; border-radius: 4px; overflow: hidden; cursor: pointer; opacity: 0.6; transition: all 0.2s; }
+        .thumb-item.active { border-color: #667eea; opacity: 1; }
+        .thumb-item img { width: 100%; height: 100%; object-fit: cover; }
+        .thumb-item:hover { opacity: 0.9; border-color: #999; }
+        @media screen and (max-width: 992px) {
+            .main-image-container { height: 300px; }
+        }
+        @media screen and (max-width: 768px) {
+            .main-image-container { height: 250px; }
+            .thumb-item { width: 50px; height: 50px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="layui-container">
+            <div class="layui-row" style="display: flex; align-items: center; height: 60px;">
+                <div class="layui-col-md2" style="flex-shrink: 0;">
+                    <h1 style="color:white; line-height: 60px; font-size: 24px; font-weight: 700; margin: 0;">🏪 二手集市</h1>
+                </div>
+                
+                <div class="layui-col-md2 nav-links">
+                    <a href="/">首页</a>
+                    <a href="/products">全部商品</a>
+                    <a href="/products/my">我的商品</a>
+                </div>
+                
+                <div class="layui-col-md5 search-form" style="flex: 1; min-width: 0; padding: 0 15px;">
+                    <form action="/products" method="get" style="width: 100%; display: flex;">
+                        <input type="text" name="keyword" placeholder="搜索商品..." class="layui-input" style="height: 36px; border-radius: 4px 0 0 4px; flex: 1; min-width: 0;">
+                        <div class="layui-input-group-btn" style="flex-shrink: 0;">
+                            <button class="layui-btn" style="height: 36px; line-height: 36px; background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.4); color: white; padding: 0 14px;">搜索</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="layui-col-md3" style="display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0; gap: 8px;">
+                    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰ 菜单</button>
+                    <a href="/products/publish" class="layui-btn" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);">📦 发布</a>
+                    <div class="user-menu" id="userMenu">
+                        <button class="user-menu-btn" onclick="toggleUserMenu()">
+                            <span th:if="${session.user == null}">👤 登录</span>
+                            <span th:else>👤 [[${session.user?.nickname}]]</span>
+                            <span>▼</span>
+                        </button>
+                        <div class="user-dropdown">
+                            <th:block th:if="${session.user == null}">
+                                <a href="/login">🔐 登录</a>
+                                <a href="/register">📝 注册</a>
+                            </th:block>
+                            <th:block th:else>
+                                <a href="/profile">👤 个人中心</a>
+                                <a href="/products/my">📦 我的商品</a>
+                                <a href="/orders/buy">🛒 我的订单</a>
+                                <a href="/messages">💬 私信</a>
+                                <a href="/logout" style="color: #ff5722;">🚪 退出登录</a>
+                            </th:block>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mobileMenu" class="mobile-menu">
+            <a href="/">首页</a>
+            <a href="/products">全部商品</a>
+            <a href="/products/my">我的商品</a>
+            <a href="/orders/buy">我的订单</a>
+            <a href="/messages">私信</a>
+        </div>
+    </div>
+
+    <div class="layui-container" style="margin-top: 20px;">
+        <div th:if="${param.error != null}" class="layui-row">
+            <div class="layui-col-md12">
+                <div class="layui-card" style="border: 1px solid #ff5722;">
+                    <div class="layui-card-body" style="color: #ff5722; text-align: center;">
+                        <span th:text="${param.error[0]}">错误信息</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-row">
+            <div class="layui-col-md6">
+                <div class="layui-card">
+                    <div class="layui-card-body">
+                        <div class="main-image-container" id="imageGallery" th:attr="data-images=${product.images}">
+                            <img id="mainImage" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23f5f5f5' width='400' height='400'/%3E%3Ctext fill='%23ccc' x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='16'%3E暂无图片%3C/text%3E%3C/svg%3E"
+                                 alt="商品图片">
+                        </div>
+                        <div class="thumb-list" id="thumbList"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="layui-col-md6">
+                <div class="layui-card">
+                    <div class="layui-card-body">
+                        <h2 class="layui-h2">[[${product.title}]]</h2>
+                        <p style="color: #ff5722; font-size: 28px; font-weight: bold; margin: 20px 0;">¥[[${product.price}]]</p>
+                        <p th:if="${product.originalPrice != null}" style="color: #999; text-decoration: line-through;">原价: ¥[[${product.originalPrice}]]</p>
+                        
+                        <div class="layui-row" style="margin: 20px 0;">
+                            <div class="layui-col-md4">
+                                <span class="layui-badge layui-bg-gray">[[${product.categoryName}]]</span>
+                            </div>
+                            <div class="layui-col-md4">
+                                <span style="color: #999;">浏览量: [[${product.views}]]</span>
+                            </div>
+                        </div>
+                        
+                        <div style="padding: 15px; background: #f9f9f9; margin: 20px 0;">
+                            <p style="color: #666;">[[${product.description}]]</p>
+                        </div>
+                        
+                        <div class="layui-row" style="margin: 20px 0;">
+                            <div class="layui-col-md6">
+                                <p style="color: #999;">卖家: [[${product.userNickname}]]</p>
+                            </div>
+                            <div class="layui-col-md6">
+                                <a th:href="@{/messages/chat/{userId}(userId=${product.userId})}" class="layui-btn layui-btn-primary">联系卖家</a>
+                            </div>
+                        </div>
+                        
+                        <form th:if="${currentUser != null && currentUser.id != product.userId && product.status == 1}" 
+                              action="/orders/create" method="post">
+                            <input type="hidden" name="productId" th:value="${product.id}">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">收货地址</label>
+                                <div class="layui-input-block">
+                                    <textarea name="address" required lay-verify="required" placeholder="请输入收货地址" class="layui-textarea"></textarea>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">备注</label>
+                                <div class="layui-input-block">
+                                    <input type="text" name="remark" placeholder="选填" class="layui-input">
+                                </div>
+                            </div>
+                            <button class="layui-btn layui-btn-lg layui-btn-fluid" lay-submit>立即购买</button>
+                        </form>
+                        
+                        <div th:if="${currentUser == null}" style="text-align: center; padding: 20px;">
+                            <a href="/login" class="layui-btn layui-btn-lg">登录后购买</a>
+                        </div>
+                        
+                        <div th:if="${currentUser != null && currentUser.id == product.userId}" style="text-align: center; padding: 20px;">
+                            <a th:href="@{/products/{id}/edit(id=${product.id})}" class="layui-btn">编辑商品</a>
+                            <a th:href="@{/products/{id}/delete(id=${product.id})}" class="layui-btn layui-btn-danger">删除商品</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 商品评价区域 -->
+    <div class="layui-container" style="margin-top: 20px;">
+        <div class="layui-row">
+            <div class="layui-col-md12">
+                <div class="layui-card">
+                    <div class="layui-card-header">商品评价 ([[${#lists.size(reviews)}]])</div>
+                    <div class="layui-card-body">
+                        <div th:if="${#lists.isEmpty(reviews)}" style="text-align: center; padding: 30px;">
+                            <p style="color: #999;">暂无评价</p>
+                        </div>
+                        <div th:each="review : ${reviews}" class="layui-row" style="border-bottom: 1px solid #eee; padding: 15px;">
+                            <div class="layui-col-md1">
+                                <div style="width: 40px; height: 40px; background: #f5f5f5; border-radius: 50%;"></div>
+                            </div>
+                            <div class="layui-col-md11">
+                                <div class="layui-row">
+                                    <div class="layui-col-md6">
+                                        <span style="font-weight: bold;">[[${review.userNickname}]]</span>
+                                        <span style="color: #ffc107; margin-left: 10px;">
+                                            <span th:each="i : ${#numbers.sequence(1, review.rating)}">★</span>
+                                            <span th:each="i : ${#numbers.sequence(review.rating + 1, 5)}" style="color: #ddd;">★</span>
+                                        </span>
+                                    </div>
+                                    <div class="layui-col-md6" style="text-align: right; color: #999; font-size: 12px;">
+                                        <span th:text="${review.createdAt}">2024-01-01 12:00</span>
+                                    </div>
+                                </div>
+                                <p style="margin-top: 8px; color: #666;">[[${review.content}]]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-footer" style="text-align: center; padding: 20px; background: #f5f5f5; margin-top: 30px;">
+        <p>二手交易平台 © 2026</p>
+    </div>
+
+    <script src="https://cdn.staticfile.org/layui/2.8.18/layui.js"></script>
+    <script>
+    (function() {
+        var gallery = document.getElementById('imageGallery');
+        if (!gallery) return;
+        var images;
+        try {
+            images = JSON.parse(gallery.getAttribute('data-images'));
+        } catch(e) { images = []; }
+
+        var mainImage = document.getElementById('mainImage');
+        var thumbList = document.getElementById('thumbList');
+
+        if (images.length === 0) return;
+
+        mainImage.src = images[0];
+
+        images.forEach(function(url, index) {
+            var thumb = document.createElement('div');
+            thumb.className = 'thumb-item' + (index === 0 ? ' active' : '');
+            thumb.innerHTML = '<img src="' + url + '" alt="缩略图">';
+            thumb.addEventListener('click', function() {
+                mainImage.src = url;
+                thumbList.querySelectorAll('.thumb-item').forEach(function(t) {
+                    t.classList.remove('active');
+                });
+                thumb.classList.add('active');
+            });
+            thumbList.appendChild(thumb);
+        });
+    })();
+
+    function toggleMobileMenu() {
+        var menu = document.getElementById('mobileMenu');
+        if (menu.style.display === 'block') {
+            menu.style.display = 'none';
+        } else {
+            menu.style.display = 'block';
+        }
+    }
+
+    function toggleUserMenu() {
+        var userMenu = document.getElementById('userMenu');
+        userMenu.classList.toggle('active');
+    }
+
+    document.addEventListener('click', function(event) {
+        var mobileMenu = document.getElementById('mobileMenu');
+        var mobileBtn = document.querySelector('.mobile-menu-btn');
+        var userMenu = document.getElementById('userMenu');
+        var userBtn = document.querySelector('.user-menu-btn');
+        
+        if (mobileMenu && mobileBtn && !mobileMenu.contains(event.target) && !mobileBtn.contains(event.target)) {
+            mobileMenu.style.display = 'none';
+        }
+        
+        if (userMenu && userBtn && !userMenu.contains(event.target) && !userBtn.contains(event.target)) {
+            userMenu.classList.remove('active');
+        }
+    });
+    </script>
+</body>
+</html>

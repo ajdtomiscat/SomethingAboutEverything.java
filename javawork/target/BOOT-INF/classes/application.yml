@@ -1,0 +1,44 @@
+
+server:
+  port: 8080
+
+spring:
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 25MB
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/secondhand?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+  
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+  
+  session:
+    store-type: memory
+    timeout: 3600s
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.example.secondhand.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    com.example.secondhand: DEBUG
+    org.mybatis: DEBUG
+    org.springframework.web: DEBUG

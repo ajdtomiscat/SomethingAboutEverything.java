@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Test DB</title>
+</head>
+<body>
+    <h1>Database Test</h1>
+    
+    <div th:if="${error != null}">
+        <h2>Error:</h2>
+        <p th:text="${error}"></p>
+    </div>
+
+    <div th:if="${error == null}">
+        <p>Category count: <span th:text="${count}"></span></p>
+        <ul>
+            <li th:each="cat : ${categories}" th:text="${cat.name}"></li>
+        </ul>
+    </div>
+</body>
+</html>
